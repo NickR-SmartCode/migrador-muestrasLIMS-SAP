@@ -1,0 +1,863 @@
+﻿@{
+    string NombreUsuario = ViewBag.NombreUsuario as string ?? "";
+    string RazonSocial = ViewBag.RazonSocial as string ?? "";
+    string SubDominio = ViewBag.SubDominio as string ?? "";
+
+    var request = Context.Request;
+
+    string esquema = request.Scheme;
+    string host = request.Host.Host;
+    int? puerto = request.Host.Port;
+
+    string baseUrl = $"{esquema}://{host}" +
+        ((puerto.HasValue && puerto != 80 && puerto != 443) ? $":{puerto}" : "");
+}
+
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="description" content="">
+    <meta name="keywords" content="nobleui, bootstrap, bootstrap 5, bootstrap5, admin, dashboard, template, responsive, css, sass, html, theme, front-end, ui kit, web">
+
+    <title>Proyecto Base</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+    <link rel="shortcut icon" href="" />
+
+    @*@Styles.Render("~/Content/LayoutStyles")*@
+
+    <link rel="stylesheet" href="~/css/main.css" />
+    <link rel="stylesheet" href="~/vendors/core/core.css">
+    <link rel="stylesheet" href="~/vendors/prismjs/themes/prism.css">
+    <link rel="stylesheet" href="~/vendors/flatpickr/flatpickr.min.css">
+    <link rel="stylesheet" href="~/fonts/feather-font/css/iconfont.css">
+    <link rel="stylesheet" href="~/vendors/flag-icon-css/css/flag-icon.min.css">
+    <link rel="stylesheet" href="~/css/demo1/style.css">
+    <link rel="stylesheet" href="~/vendors/datatables.net-bs5/dataTables.bootstrap5.css">
+    <link rel="stylesheet" href="~/css/demo1/style.css">
+    <link rel="stylesheet" href="~/vendors/sweetalert2/sweetalert2.min.css">
+    <link rel="stylesheet" href="~/vendors/select2/select2.min.css">
+    <link rel="stylesheet" href="~/vendors/select2/select2-bootstrap-5-theme.min.css">
+    <link rel="stylesheet" href="~/vendors/datatables.net/rowReorder.dataTables.min.css">
+    <link rel="stylesheet" href="~/vendors/jqueryui/jquery-ui.css">
+    <link rel="stylesheet" href="~/vendors/datatables.net/responsive.dataTables.min.css">
+    <link href="~/assets/alertify.css" rel="stylesheet" />
+    <link href="~/assets/alertify.min.css" rel="stylesheet" />
+    <link href="~/assets/loader/loader.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" integrity="sha384-tViUnnbYAV00FLIhhi3v/dWt3Jxw4gZQcNoSCxCIFNJVCx7/D55/wXsrNIRANwdD" crossorigin="anonymous">
+
+    <style>
+        .text-primary {
+            color: #2f4864 !important;
+        }
+
+        .bg-primary {
+            background-color: #2f4864 !important;
+        }
+
+        .quitar-flechitas::-webkit-inner-spin-button,
+        .quitar-flechitas::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .quitar-flechitas {
+            -moz-appearance: textfield; /* Firefox */
+        }
+
+        .select2-container--bootstrap-5 .select2-dropdown {
+            box-shadow: none !important;
+            outline: none !important;
+            border-color: var(--bs-gray-400) !important;
+        }
+
+        .select2-container--bootstrap-5 .select2-selection {
+            box-shadow: none !important;
+            outline: none !important;
+            border-color: var(--bs-gray-400) !important;
+        }
+
+            .select2-container--bootstrap-5 .select2-selection:focus {
+                box-shadow: none !important;
+                outline: none !important;
+                border-color: var(--bs-gray-400) !important;
+            }
+
+
+            .select2-container--bootstrap-5 .select2-selection:focus {
+                box-shadow: none !important;
+                outline: none !important;
+                border-color: var(--bs-gray-400) !important;
+            }
+
+        .select2-container--bootstrap-5 .select2-search__field:focus {
+            box-shadow: none !important;
+            outline: none !important;
+            border-color: var(--bs-gray-400) !important;
+        }
+
+
+        .sidebar {
+            background: #F7F7F7 !important;
+        }
+
+            .sidebar .sidebar-header {
+                background: #F7F7F7 !important;
+                border-bottom: 1px solid #F7F7F7;
+                border-right: none !important;
+            }
+
+            .sidebar .sidebar-body {
+                background: #F7F7F7 !important;
+                padding: 10px 10px !important;
+            }
+
+
+        #RazonSocial {
+            color: #232323;
+            font-size: 0.8rem;
+            font-weight: 500;
+            padding: 15px 5px;
+            border-bottom: 1px solid #dfdfdf;
+            margin-bottom: 15px;
+            word-wrap: break-word;
+        }
+
+        #ulMenuPr {
+            padding: 25px 25px 50px 6px !important;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+
+        .nav-category {
+            color: #232323 !important;
+            font-size: 0.7rem !important;
+            font-weight: 700 !important;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            padding-left: 10px;
+        }
+
+
+        .sidebar .nav .nav-item .nav-link {
+            color: #555 !important; /* Color base suave */
+            padding: 10px 12px;
+            border-radius: 8px; /* Bordes redondeados modernos */
+            margin-bottom: 4px;
+            font-weight: 400;
+            display: flex !important;
+            align-Items: center;
+            height: auto !important;
+            white-space: normal !important;
+            line-height: 1.3;
+            padding: 8px 12px !important;
+            transition: all 0.2s ease-in-out; /* Transición suave */
+        }
+
+
+            .sidebar .nav .nav-item .nav-link i {
+                color: #555 !important;
+                margin-right: 10px;
+                font-size: 18px;
+                flex-shrink: 0;
+                transition: color 0.2s;
+            }
+
+
+            /* HOVER: Sutil gris */
+            .sidebar .nav .nav-item .nav-link:hover {
+                background-color: rgba(0,0,0,0.04) !important;
+                color: #000 !important;
+            }
+
+                .sidebar .nav .nav-item .nav-link:hover i {
+                    color: #000 !important;
+                }
+
+            /* MENU PADRE ABIERTO: Limpio, sin sombras amarillas */
+            .sidebar .nav .nav-item .nav-link[aria-expanded="true"] {
+                background-color: #e9ecef !important; /* Gris muy claro */
+                box-shadow: none !important; /* Eliminado el glow amarillo */
+                color: #000 !important;
+                font-weight: 600 !important;
+            }
+
+                .sidebar .nav .nav-item .nav-link[aria-expanded="true"] i {
+                    color: #2f4864 !important; /* Icono un poco más oscuro */
+                }
+
+
+            .sidebar .nav .nav-item .nav-link .link-title {
+                font-size: 13px;
+                flex: 1;
+            }
+
+
+            .sidebar .nav .nav-item .nav-link[data-bs-toggle="collapse"]::after {
+                color: #232323;
+                margin-left: auto;
+            }
+
+
+        .sidebar .nav .sub-menu {
+            background: transparent !important;
+            padding-left: 0 !important;
+            margin-top: 0;
+            background-color: rgba(0, 0, 0, 0) !important;
+        }
+
+            .sidebar .nav .sub-menu .nav-item .nav-link {
+                padding: 8px 10px 8px 42px !important;
+                font-size: 13px !important;
+                color: #555 !important;
+                border-radius: 8px; /* Redondeado en submenus también */
+            }
+
+                .sidebar .nav .sub-menu .nav-item .nav-link:hover {
+                    color: #000 !important;
+                    background-color: rgba(0,0,0,0.03) !important;
+                }
+
+
+            .sidebar .nav .sub-menu .sub-menu .nav-item .nav-link {
+                padding-left: 55px !important;
+            }
+
+            .sidebar .nav .sub-menu .nav-item .nav-link:before {
+                content: none !important;
+            }
+
+
+            .sidebar-body {
+            max-height: calc(100vh - 80px);
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #d1d1d1 #f1f1f1;
+            }
+        .sidebar-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar-body::-webkit-scrollbar-thumb {
+            background: #3e4b5b;
+            border-radius: 3px;
+        }
+
+        .sidebar-body::-webkit-scrollbar-track {
+            background: #222e3c;
+        }
+
+        /* MENU SELECCIONADO (HIJO ACTIVO): Moderno y Limpio */
+        .sidebar .nav .nav-item .nav-link.active {
+            color: #2f4864 !important; /* Azul oscuro corporativo */
+            font-weight: 600;
+            background-color: #dce4ef !important; /* Fondo sutil azulado/grisaceo */
+            border-left: none !important; /* Eliminado borde verde */
+            box-shadow: none;
+        }
+
+
+        .sidebar .nav .nav-item .nav-link.parent-active {
+            color: #090909 !important;
+        }
+
+
+        .select2-container .select2-selection--single .select2-selection__rendered {
+            display: box !important;
+        }
+
+        .select2-container .select2-selection--single {
+            height: 40px;
+        }
+
+        .form-check-input:checked {
+            background-color: #2f4864 !important;
+            border-color: #2f4864 !important;
+        }
+
+        .tab {
+            overflow: hidden;
+            border: 1px solid #5a7491 !important;
+            background-color: #5a7491 !important;
+            color: white !important
+        }
+
+            .tab button {
+                color: white !important
+            }
+
+                .tab button:hover {
+                    overflow: hidden;
+                    background-color: #49617a !important;
+                    color: white !important
+                }
+
+                .tab button.active {
+                    background-color: #2f4864 !important;
+                    color: white !important
+                }
+
+        table tr th {
+            font-size: 12px !important;
+        }
+
+        table tr td {
+            font-size: 12px !important;
+        }
+
+        table th {
+            background-color: #EEF2F8 !important;
+        }
+
+        table.dataTable tbody th, table.dataTable tbody td {
+            padding-bottom: 10px;
+        }
+
+        input, select, label, textarea {
+            font-size: 12px !important;
+        }
+
+        .fooSelect {
+            display: inline;
+        }
+
+            .fooSelect .select2-selection__rendered {
+                font-size: 12px !important;
+            }
+
+        .select2-selection__rendered {
+            font-size: 12px !important;
+        }
+
+
+        .sidebar,
+        .sidebar .nav,
+        .sidebar .nav-link,
+        .sidebar-header,
+        #RazonSocial {
+            font-family: 'Outfit', sans-serif !important;
+        }
+
+
+            .sidebar .nav .nav-item .nav-link {
+                font-size: 14px !important;
+                font-weight: 500 !important;
+                letter-spacing: 0.3px;
+            }
+
+                .sidebar .nav .nav-item .nav-link .link-title {
+                    font-size: 14px !important;
+                }
+
+
+        .nav-category {
+            font-family: 'Outfit', sans-serif !important;
+            font-size: 0.75rem !important;
+            font-weight: 700 !important;
+            letter-spacing: 1.2px;
+        }
+
+
+
+        .sidebar .nav .sub-menu .nav-item .nav-link,
+        .sidebar .nav .sub-menu .sub-menu .nav-item .nav-link {
+            font-size: 13px !important;
+            font-weight: 400 !important;
+            line-height: 1.5;
+        }
+
+
+        .sidebar .nav .nav-item .nav-link i {
+            font-size: 18px !important;
+            margin-top: -2px;
+        }
+
+
+        #RazonSocial {
+            font-size: 0.9rem !important;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-link .link-arrow {
+            font-size: 10px !important;
+            margin-left: auto !important;
+            transition: transform 0.3s ease !important;
+            color: #999 !important; /* Flecha más sutil por defecto */
+        }
+
+
+        .nav-link:hover .link-arrow,
+        .nav-link[aria-expanded="true"] .link-arrow {
+            color: #2f4864 !important; /* Color activo */
+        }
+
+
+        .nav-link[aria-expanded="true"] .link-arrow {
+            transform: rotate(180deg) !important;
+        }
+
+
+        .sidebar-folded .sidebar {
+            width: 70px !important; /* Ajusta según el ancho de tu icono */
+        }
+
+            /* Ocultar el texto del menú cuando está colapsado */
+            .sidebar-folded .sidebar .link-title,
+            .sidebar-folded .sidebar #RazonSocial,
+            .sidebar-folded .sidebar .nav-category,
+            .sidebar-folded .sidebar .link-arrow {
+                display: none !important;
+            }
+
+        /* Ajustar el contenedor principal cuando el sidebar se pliega */
+        .sidebar-folded .page-wrapper {
+            margin-left: 70px !important;
+        }
+
+
+    </style>
+</head>
+<body>
+    <div class="main-wrapper" @*style="zoom:82%"*@>
+
+        <!--loader-->
+        <div class="centrar" id="loader">
+            <div class="lds-ripple loader"><div></div><div></div></div>
+        </div>
+
+
+        <!-- partial:partials/_sidebar.html -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <a style="font-size:1.2rem" href="#" class="sidebar-brand">
+                    <img src="~/images/merieux-logo.svg" style="height: 40px; object-fit:contain;" />
+                </a>
+                <div class="sidebar-toggler not-active">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+            <div class="sidebar-body">
+                <div id="RazonSocial">
+                    <span> @RazonSocial</span>
+                </div>
+                <ul id="ulMenuPr" class="nav">
+
+                    @* ACA VA EL MENUUUUUUUU*@
+                </ul>
+            </div>
+        </nav>
+        <!-- partial -->
+
+        <div class="page-wrapper">
+
+            <!-- partial:partials/_navbar.html -->
+            <nav class="navbar">
+                <a href="#" class="sidebar-toggler">
+                    <i data-feather="menu"></i>
+                </a>
+                <div class="navbar-content">
+                    <ul class="navbar-nav">
+
+
+                        @* NOTIFICACION *@
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i data-feather="bell"></i>
+                                @*<div class="indicator" id="notificationIndicator">
+                                        <div class="circle"></div>
+                                    </div>*@
+                            </a>
+                            <div class="dropdown-menu p-0" aria-labelledby="notificationDropdown">
+                                <div class="px-3 py-2 d-flex align-Items-center justify-content-between border-bottom gap-4" id="notificationHeader">
+                                    @*<p id="notificationCount">6 New Notifications</p>
+                                        <a href="javascript:;" class="text-muted">Clear all</a>*@
+                                    <p id="notificationCount">
+                                        <span id="contadorDeNotificaciones">0</span>
+                                        <span id="contadorDenotificacionesLabel"></span>
+                                    </p>
+                                </div>
+                                <div class="p-1" id="notificationBody">
+
+                                    @* Contenedor de notificaciones *@
+                                    <div class="contenedorDeNotificacion" id="notiProveedorNoRegistrado"></div>
+                                    <div class="contenedorDeNotificacion" id="notiDocumentosSinCondicionPago"></div>
+                                    <div class="contenedorDeNotificacion" id="notiDocumentoRelacionItemIncompleta"></div>
+
+
+
+                                    <div class="d-flex justify-content-center align-Items-center py-2 text-secondary">
+                                        <p id="sinNotificacionesMessage">Sin notificaciones</p>
+                                    </div>
+                                </div>
+                                @*<div class="px-3 py-2 d-flex align-Items-center justify-content-center border-top">
+                                        <a href="javascript:;">View all</a>
+                                    </div>*@
+                            </div>
+                        </li>
+
+                        <p >@NombreUsuario</p>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <img class="wd-30 ht-30 rounded-circle" src="~/images/meriux-logo.png" alt="profile">
+                            </a>
+                            <div class="dropdown-menu p-0" aria-labelledby="profileDropdown">
+                                <div class="d-flex flex-column align-Items-center border-bottom px-5 py-3">
+                                    <div class="mb-3">
+                                        <img class="wd-80 ht-80 rounded-circle" src="~/images/smartlogistics-icon.png" alt="">
+                                    </div>
+                                    <div class="text-center">
+                                        <p class="tx-16 fw-bolder">@NombreUsuario</p>
+
+                                    </div>
+                                </div>
+                                <ul class="list-unstyled p-1">
+
+                                    <li class="dropdown-item py-2">
+                                        <a href="/Usuario/CambiarClave" class="text-body ms-0">
+                                            <i class="me-2 icon-md" data-feather="lock"></i>
+                                            <span>Cambiar Contraseña</span>
+                                        </a>
+                                    </li>
+                                    <li class="dropdown-item py-2" onclick="location.href='../Home/CerrarSesion';" style="">
+                                        <a href="../Home/CerrarSesion" class="text-body ms-0">
+                                            <i class="me-2 icon-md" data-feather="log-out"></i>
+
+                                            <span>Cerrar Sesion</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+            <!-- partial -->
+
+            <div class="page-content">
+                @RenderBody()
+            </div>
+
+            <!-- partial:partials/_footer.html -->
+            <footer class="footer d-flex flex-column flex-md-row align-Items-center justify-content-between px-4 py-3 border-top small">
+                <p class="text-muted mb-1 mb-md-0">Copyright © 2023 SmartCode</p>
+            </footer>
+            <!-- partial -->
+
+        </div>
+    </div>
+    
+    <script src="~/vendors/core/core.js"></script>
+
+    <script src="~/vendors/apexcharts/apexcharts.min.js"></script>
+    <script src="~/vendors/feather-icons/feather.min.js"></script>
+
+    <script src="~/js/template.js"></script>
+
+    <script src="~/js/dashboard-light.js"></script>
+    <script src="~/js/jquery/jquery-3.6.4.min.js"></script>
+
+    <script src="~/vendors/datatables.net/jquery.dataTables.js"></script>
+
+    <script src="~/vendors/datatables.net-bs5/dataTables.bootstrap5.js"></script>
+    <script src="~/vendors/select2/select2.min.js"></script>
+    <script src="~/js/select2.js"></script>
+    <script src="~/assets/alertify.js"></script>
+    <script src="~/assets/alertify.min.js"></script>
+    <script src="~/vendors/sweetalert2/sweetalert2.min.js"></script>
+    <script src="~/js/sweet-alert.js"></script>
+    <script src="~/js/bootstrap-treeview.js"></script>
+
+    <script src="https://kit.fontawesome.com/d152bd8a2a.js" crossorigin="anonymous"></script>
+
+    <script src="~/vendors/flatpickr/flatpickr.js"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
+    <script src="~/vendors/datatables.net/dataTables.rowReorder.min.js"></script>
+    <script src="~/vendors/datatables.net/dataTables.responsive.min.js"></script>
+    <script src="~/vendors/jqueryui/jquery-ui.min.js"></script>
+    <script src="~/vendors/typeahead.js/typeahead_smc.bundle.min.js"></script>
+    <script src="~/vendors/moment/moment_smc.min.js"></script>
+
+    <script src="~/vendors/jquery-validate/jquery.validate.min.js"></script>
+    <script src="~/vendors/jquery-validate/additional-methods.min.js"></script>
+
+    <script src="@Url.Content("~/js/chart.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Scripts/Core/ApiService.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Scripts/Core/DataValidations.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Scripts/Core/UI.js")" type="text/javascript"></script>
+    <script src="@Url.Content("~/Scripts/Core/Utils.js")" type="text/javascript"></script>
+
+
+    @*@Scripts.Render("~/bundles/LayoutScripts")*@
+    <script>
+        
+        window.AppConfig = {
+            BaseURL: "@Url.Content("~")"
+        };
+    
+        const link = window.location.href
+        let url
+        let href="";
+    
+        document.addEventListener("DOMContentLoaded", function (event) {
+            setTimeout(function () {
+                document.getElementById("loader").classList.toggle("loader2");
+            }, 1500);
+            ObtenerAccesoMenuxPerfil()
+
+                    document.querySelector(".sidebar-toggler").addEventListener("click", function() {
+            document.body.classList.toggle("sidebar-folded");
+        });
+        });
+
+
+        let menu
+        let controller
+
+        function ObtenerAccesoMenuxPerfil() {
+            $.ajax({
+                url: "/Menu/ObtenerMenuxPerfil",
+                method: "POST",
+                data: {},
+               success: function (data) {
+                    if (data == "Error") {
+                        swal("Error!", "Ocurrio un error")
+                    } else {
+                        let tr = '<li class="nav-item nav-category">Menú</li>';
+                        let perfiles = (data);
+
+                        //console.log(perfiles)
+                        for (var i = 0; i < perfiles.length; i++) {
+                            if (data) {
+                                let valor = perfiles[i].Descripcion.split(" ").join("") + 's';
+                                menu = perfiles[i].Menu
+                                controller = perfiles[i].Controller
+                                let iconoMenu = '';
+                                let logoMenu = '';
+                                switch (perfiles[i].Descripcion.toUpperCase()) {
+                                    case 'SEGURIDAD': iconoMenu = 'fa-solid fa-user-shield'
+                                        break;
+                                    case 'GESTION': iconoMenu = 'fa-solid fa-table'
+                                        break;
+                                    case 'INTEGRACIÓN LIMS': iconoMenu = 'fa-solid fa-vials'
+                                        break;
+                                    case 'PRUEBAS APROBACIONES': iconoMenu = 'fa-solid fa-check-double'
+                                        break;
+                                    case 'PEDIDOS': iconoMenu = 'fa-solid fa-file-invoice'
+                                        break;
+                                          case 'DASHBOARD': iconoMenu = 'fa-solid fa-chart-simple'
+                                        break;
+                                    case 'Socio Negocio': iconoMenu = 'fa-solid fa-people-group'
+                                        break;
+                                    case 'Venta Clientes': iconoMenu = 'fa-solid fa-cart-shopping'
+                                        break;
+                                    case 'Inventario': iconoMenu = 'fa-solid fa-warehouse'
+                                        break;
+                                    case 'Requerimiento': iconoMenu = 'fa-solid fa-clipboard-check'
+                                        break;
+                                    case 'Administracion': iconoMenu = 'fa-solid fa-briefcase'
+                                        break;
+                                    case 'Compras': iconoMenu = 'fa-solid fa-cart-flatbed'
+                                        break;
+                                    case 'Compras y Almacén': iconoMenu = 'fa-solid fa-cart-flatbed'
+                                        break;
+                                    case 'Aprobaciones': iconoMenu = 'fa-solid fa-list-check'
+                                        break;
+                                    case 'Integrador': iconoMenu = 'fa-solid fa-laptop-code'
+                                        break;
+                                    case 'Finanzas': iconoMenu = 'fa-solid fa-sack-dollar'
+                                        break;
+                                    case 'Gestion de Bancos': iconoMenu = 'fa-solid fa-building-columns'
+                                        break;
+                                    case 'Logistica': iconoMenu = 'fa-solid fa-truck-fast'
+                                        break;
+                                    case 'Portal Proveedores':
+                                          logoMenu = `
+                                        <img src="@baseUrl/images/portal-proveedores/09-isotipo-positivo(2).png"
+                                        style="height: 12px"
+                                        />
+                                        `
+                                        break;
+                                    case 'Comunicados': iconoMenu = 'fa-solid fa-bullhorn'
+                                        break;
+                                    case 'SIRE': iconoMenu = 'fas fa-share-alt-square'
+                                        break;
+                                    case 'Ventas': iconoMenu = 'fa-solid fa-shopping-cart'
+                                        break;
+
+                                    case 'SmartLogistics':
+                                        logoMenu = `
+                                        <img src="@baseUrl/images/smartlogistics/isotipo-original(2).png"
+                                        style="height: 12px"
+                                        />
+                                        `
+
+                                        break;
+
+
+                                    default: iconoMenu = 'fa-solid fa-question'
+
+                                }
+                                tr += '<li class="nav-item">'
+                                tr += '<a class="nav-link collapsed" data-bs-toggle="collapse" href="#' + valor + '" role="button" aria-expanded="false" aria-controls="' + valor + '">'
+                                tr += (logoMenu != '' ? logoMenu : '<i class="' + iconoMenu + '"></i>');
+                                tr += '<span class="link-title">' + perfiles[i].Descripcion.toUpperCase() + '</span>'
+                                tr += '<i class="fa-solid fa-chevron-down link-arrow" style="font-size: 10px !important"></i>';
+
+                                tr += '</a>'
+
+
+
+                                tr += '<div class="collapse" id="' + valor + '" style> <ul class="nav sub-menu">'
+
+                                for (var j = 0; j < perfiles[i].Items.length; j++) {
+
+                                    if (perfiles[i].Items[j].ItemsSubMenu == 0 || perfiles[i].Items[j].ItemsSubMenu == null) {
+                                        tr += '<li class="nav-item">'
+                                        // tr += '<a class="nav-link" href="/' + href + perfiles[i].Items[j].Controller + '/Listado">' + perfiles[i].Items[j].Descripcion + ' </a> '
+                                        tr += '<a class="nav-link" href="/' + href + perfiles[i].Items[j].Controller + '/' + perfiles[i].Items[j].Action + '">' + perfiles[i].Items[j].Descripcion + ' </a> '
+                                        tr += '</li>'
+                                    } else {
+
+                                        tr += '<li class="nav-item">'
+                                        tr += '<a class="nav-link collapsed" data-bs-toggle="collapse" href="#' + valor + j.toString() + '" role="button" aria-expanded="false" aria-controls="' + valor + j.toString() + '">'
+                                        //tr += '<i class="' + iconoMenu + '"></i>'
+                                        tr += '<span style="margin-left:0px" class="link-title">' + perfiles[i].Items[j].Descripcion + '  </span>'
+                                        tr += '<i class="fa-solid fa-chevron-down link-arrow" style="font-size: 10px !important"></i>';
+                                        //tr += '<i class="fa-solid fa-chevron-down" link-arrow></i>'
+                                        tr += '</a>'
+
+                                        // MODIFICACION: Eliminé estilos inline para permitir que el CSS controle el diseño
+                                        tr += '<div class="collapse" id="' + valor + j.toString() + '" style> <ul class="nav sub-menu">'
+                                        for (var k = 0; k < perfiles[i].Items[j].ItemsSubMenu.length; k++) {
+                                            //let a = perfiles[i].Items[j].ItemsSubMenu[k]
+                                            //console.log(a)
+                                            if (perfiles[i].Items[j].ItemsSubMenu[k].ItemsSubMenu2 == 0 || perfiles[i].Items[j].ItemsSubMenu[k].ItemsSubMenu2 == null) {
+                                                tr += '<li class="nav-item">'
+                                                // MODIFICACION: Eliminé estilos inline (color:black, margin-left)
+                                                tr += '<a class="nav-link" href="/' + href + perfiles[i].Items[j].ItemsSubMenu[k].Controller + '/' + perfiles[i].Items[j].ItemsSubMenu[k].Action + '">' + perfiles[i].Items[j].ItemsSubMenu[k].Descripcion + ' </a> '
+                                                tr += '</li>'
+                                            } else {
+                                                tr += '<li class="nav-item">'
+                                                tr += '<a class="nav-link collapsed" data-bs-toggle="collapse" href="#' + valor + j.toString() + k.toString() + '" role="button" aria-expanded="false" aria-controls="' + valor + j + k.toString() + '">'
+                                                //tr += '<i class="' + iconoMenu + '"></i>'
+                                                tr += '<span style="margin-left:0px" class="link-title">' + perfiles[i].Items[j].ItemsSubMenu[k].Descripcion + ' </span>'
+                                                tr += '<i class="fa-solid fa-chevron-down link-arrow" style="font-size: 10px !important"></i>';
+                                                //tr += '<i class="fa-solid fa-chevron-down" link-arrow></i>'
+                                                tr += '</a>'
+
+
+                                                // MODIFICACION: Eliminé estilos inline
+                                                tr += '<div class="collapse" id="' + valor + j.toString() + k.toString() + '" style> <ul class="nav sub-menu">'
+                                                for (var l = 0; l < perfiles[i].Items[j].ItemsSubMenu[k].ItemsSubMenu2.length; l++) {
+                                                    tr += '<li class="nav-item">'
+                                                    // MODIFICACION: Eliminé estilos inline
+                                                    tr += '<a class="nav-link" href="/' + href + perfiles[i].Items[j].ItemsSubMenu[k].ItemsSubMenu2[l].Controller + '/' + perfiles[i].Items[j].ItemsSubMenu[k].ItemsSubMenu2[l].Action + '">' + perfiles[i].Items[j].ItemsSubMenu[k].ItemsSubMenu2[l].Descripcion + ' </a> '
+                                                    tr += '</li>'
+
+
+                                                }
+                                                tr += '</ul> </div>'
+                                            }
+                                        }
+
+
+                                        tr += '</ul> </div>'
+                                    }
+
+                                }
+
+                                tr += '</ul> </div>'
+
+                                tr += ' </li>'
+                            }
+                        }
+                        $("#ulMenuPr").html(tr);
+
+                        setTimeout(function () {
+                            var currentPath = window.location.pathname.toLowerCase();
+
+                            var $activeLink = $("#ulMenuPr a.nav-link").filter(function () {
+                                var href = $(this).attr("href");
+                                return href && href.toLowerCase() === currentPath;
+                            });
+
+                            if ($activeLink.length > 0) {
+
+                                $activeLink.addClass("active");
+
+                                $activeLink.parents(".collapse").addClass("show");
+
+                                $activeLink.parents(".collapse").each(function () {
+                                    var menuId = $(this).attr("id");
+
+                                    var $parentToggler = $('a[href="#' + menuId + '"]');
+
+                                    $parentToggler.attr("aria-expanded", "true");
+                                    $parentToggler.removeClass("collapsed");
+
+                                    $parentToggler.addClass("parent-active");
+                                });
+
+                                $activeLink[0].scrollIntoView({ block: "center", behavior: "smooth" });
+                            }
+                        }, 100);
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    if (jqXHR.status === 401) {
+                        manejarTokenExpirado();
+                    } else {
+                        try {
+                            var err = JSON.parse(jqXHR.responseText);
+                            Swal.fire("Error", "Error " + jqXHR.status + ": " + err.message, "error")
+                        } catch (e) {
+                            Swal.fire("Error", "Error " + jqXHR.status + ": " + jqXHR.responseText, "error")
+                        }
+                    }
+                }
+            });
+
+
+        }
+        function MostrarSubMenu(menu, perfiles, valor) {
+            tr = '<div class="collapse" id="' + valor + '" style> <ul class="nav sub-menu">'
+            for (var i = 0; i < perfiles.length; i++) {
+                if (perfiles[i].Menu == menu && perfiles[i].Acceso == 0) {
+                    menu = perfiles[i].Menu
+                    tr += '<li class="nav-item"> '
+                    //LOCAL
+                    //tr += '<a class="nav-link" href="/' + perfiles[i].Controller + '">' + perfiles[i].Descripcion + ' </a> '
+                    //SMC IP
+                    tr += '<a class="nav-link" href="/' + href + perfiles[i].Controller + '">' + perfiles[i].Descripcion + ' </a> '
+                    tr += '</li>'
+                }
+            }
+            tr += '</ul> </div>'
+            return tr
+
+        }
+
+    </script>
+
+   @*  <script type="module" src="~/Scripts/Notificacion/Notificacion.js" asp-append-version="true"></script> *@
+    <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script>
+ @*    <script src="~/Scripts/Comunicado/Template/templates.js"></script>>
+    <script src="~/Scripts/Comunicado/comunicado.js" asp-append-version="true"></script>> *@
+    <script src="~/Scripts/General.js" asp-append-version="true"></script>>
+
+    @await RenderSectionAsync("Scripts", required: false);
+</body>
+</html>

@@ -1,0 +1,96 @@
+﻿@{
+    ViewBag.Title = "Accesos de Perfiles";
+}
+<style>
+    /* Estilos básicos del menú */
+    ul {
+        list-style-type: none;
+        padding-left: 0;
+    }
+
+    li {
+        padding: 5px 10px;
+        cursor: pointer;
+        position: relative;
+    }
+
+        li:hover {
+            background-color: #f0f0f0;
+        }
+
+    /* Submenú oculto por defecto */
+    .submenu {
+        display: none;
+        margin-left: 20px;
+    }
+
+    /* Icono desplegable */
+    .has-submenu::after {
+        content: " ▸";
+        position: absolute;
+        right: 10px;
+    }
+
+    .expanded::after {
+        content: " ▾";
+    }
+</style>
+
+<div class="container-fluid" style="height:93%;">
+    <div class="card">
+        <div class="card-body">
+            <div class="topbar-left col-xs-6">
+                <h3>Permiso de Usuarios</h3>
+            </div>
+        </div>
+        <div class="container-fluid">
+            <div class="col-xs-6">
+            </div>
+        </div>
+    </div>
+    <br />
+    <div class="card">
+        <div class="card-body">
+            <div class="col-md-12">
+                <div class="row">
+                    <label for="txtUsuario" class="control-label col-md-1 left-align">Rol</label>
+                    <div class="col-md-3">
+                        <select id="cboRol" class="form-select" onchange="CargarAccesos()"></select>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="row">
+                            <div class="col-md-3" style="display:none">
+                                <input type="text" id="txtID" class="form-control ">
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" id="btnAplicar" class="btn btn-primary pull-right plu" onclick="Guardar()">Aplicar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <br />
+    <div class="card">
+        <div class="card-body" style="height:350px">
+            <div class="container-fluid" style="overflow:auto;height:300px;padding:15px">
+                @*<ul id="ulMenu" class="nav sidebar-menuc"></ul>*@
+                <table id="tblRol">
+                    <thead>
+                        <tr>
+                            <th style="width:60%">Tabla</th>
+                            <th style="width:15%">Permiso</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbRol"></tbody>
+                </table>
+                <div id="menuContainer"></div>
+            </div>
+        </div>
+    </div>
+    @*<input type="hidden" id="hdfL" value="@ViewBag.Permiso" />*@
+</div>
+
+<script src="~/Scripts/Acceso/Listado.js" asp-append-version="true"></script>
+

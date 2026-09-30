@@ -1,0 +1,335 @@
+﻿@{
+    ViewBag.Title = "Monitor de Detalles de Pedidos SAP";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-content">
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="text-primary mb-0" style="font-weight: 700;">Monitor de Pedidos </h4>
+                <p class="text-muted" style="font-size: 0.85rem;">Vista por líneas de artículos con trazabilidad de cabecera y facturación.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button id="btnFacturar" class="btn btn-primary-custom d-none" onclick="procesarFacturacion()">
+                    <i class="bi bi-receipt-cutoff me-2"></i> Facturar Seleccionados (<span>0</span>)
+                </button>
+                <button class="btn btn-primary-outline-custom" onclick="dtPedidos.ajax.reload()">
+                    <i class="bi bi-arrow-clockwise me-2"></i> Actualizar
+                </button>
+            </div>
+        </div>
+
+        <!-- Filtros -->
+        <div class="card card-config mb-3 shadow-sm">
+            <div class="card-body p-3">
+                <div class="row align-items-end">
+                    <div class="col-md-4 position-relative">
+                <label class="form-label-custom">Cliente</label>
+                <input type="text" id="txtCliente" class="form-control form-control-modern" placeholder="Buscar por nombre o RUC..." autocomplete="off" />
+                
+                <!-- Input oculto que guardará el CardCode para enviarlo al servidor -->
+                <input type="hidden" id="hdnCardCode" value="" />
+                
+                <!-- Menú desplegable para los resultados -->
+                <ul id="listaClientes" class="dropdown-menu w-100 shadow-sm" style="max-height: 250px; overflow-y: auto; display: none; position: absolute; z-index: 1050; top: 100%;">
+                </ul>
+            </div>
+                    <div class="col-md-3">
+                        <label class="form-label-custom">Estado del Pedido</label>
+                        <select id="cmbFiltroEstado" class="form-select form-control-modern">
+                            <option value="">[ TODOS LOS ESTADOS ]</option>
+                            <option value="O">ABIERTOS</option>
+                            <option value="C">CERRADOS</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla Principal -->
+        <div class="card card-config shadow-sm">
+            <div class="card-body card-body-config">
+                <table id="tblPedidos" class="table table-modern w-100">
+                    <!-- Columnas dinámicas -->
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const PedidosService = {
+            // Apuntamos al nuevo endpoint que devuelve detalles con cabecera
+            Listar: async (d, extra) => await ApiService.dataTablesAdapter('/Pedidos/ListarDetallesPaginado', d, extra),
+            Facturar: async (payload) => await ApiService.ajax('/Pedidos/FacturarMultiple', 'POST', payload)
+        };
+
+           const OCRDSAPService = {
+            Listar: async (busqueda) => await ApiService.ajax(`/OCRDSAP/Listar?busqueda=${encodeURIComponent(busqueda)}`, 'GET')
+        };
+
+        let dtPedidos;
+
+        const getCurrencySymbol = (code) => {
+            const symbols = { 'SOL': 'S/', 'USD': '$', 'EUR': '€', 'PEN': 'S/' };
+            return symbols[code] || code;
+        };
+
+        window.onload = () => {
+            initTabla();
+               UI.$('#cmbFiltroEstado').addEventListener('change', () => dtPedidos.ajax.reload());
+                  setupAutocompleteCliente(); 
+        };
+
+        function initTabla() {
+            dtPedidos = $('#tblPedidos').DataTable({
+                serverSide: true,
+                processing: true,
+                autoWidth: false,
+                scrollX: true,
+                     scrollY: "360px",
+                 ajax: async (d, cb) => {
+                    const extraParams = { 
+                        Estado: UI.$("#cmbFiltroEstado").value, 
+                        Cliente: UI.$("#hdnCardCode").value 
+                    };
+                    cb(await PedidosService.Listar(d, extraParams));
+                },
+                columns: [
+                    {
+                        title: "",
+                        render: () => `<input type="checkbox" class="form-check-input chk-pedido" style="pointer-events: none !important;">`,
+                        width: "30px", orderable: false, className: "text-center"
+                    },
+                    {
+                        title: "Pedido #",
+                        render: (data, type, row) => `<b class="text-primary">${row.Pedido.Series}-${row.Pedido.DocNum}</b>`
+                    },
+                    {
+                        title: "Cliente",
+                        render: (data, type, row) => `
+                            <div class="d-flex flex-column">
+                                <small class="text-secondary fw-bold">${row.Pedido.CardCode}</small>
+                                <span class="text-truncate" style="max-width: 150px;">${row.Pedido.CardName}</span>
+                            </div>`
+                    },
+                    {
+                        title: "Proyecto LIMS",
+                        render: (data, type, row) => `<span class="badge bg-light text-dark border">${row.Pedido.U_ProjectoLims || '---'}</span>`
+                    },
+                    {
+                        title: "Muestra LIMS",
+                        render: (data, type, row) => `<span class="badge bg-secondary ">${row.Pedido.U_ProjectoLims || '---'}</span>`
+                    },
+                    {
+                        title: "Desc. Art.",
+                        render: (data, type, row) => `
+                            <div class="d-flex flex-column">
+                                <span class="text-wrap" style="min-width: 180px;">${row.Linea.Dscription}</span>
+                                <span style="font-size: 10px; font-weight: 800;">Item: ${row.Linea.ItemCode} | Lín: ${row.Linea.LineNum}</span>
+                            </div>`
+                    },
+                    {
+                        title: "Ref. LIMS",
+                        render: (data, type, row) => `<span class="badge bg-info text-dark">${row.Linea.U_IntegrationCode || '---'}</span>`
+                    },
+                    {
+                        title: "Cant.",
+                        className: "text-center",
+                        render: (data, type, row) => `<b>${row.Linea.Quantity}</b>`
+                    },
+                    {
+                        title: "Total Línea",
+                        className: "text-end",
+                        render: (data, type, row) => {
+                            const sym = getCurrencySymbol(row.Pedido.DocCur);
+                            return `<b>${sym} ${row.Linea.LineTotal.toFixed(2)}</b>`;
+                        }
+                    },
+                    {
+                        title: "F. Contab.",
+                        render: (data, type, row) => new Date(row.Pedido.DocDate).toLocaleDateString('es-PE')
+                    },
+                    {
+                        title: "FT SAP",
+                        className: "text-center",
+                        render: (data, type, row) => row.Pedido.NumFactura
+                            ? `<span class="badge bg-success">${row.Pedido.SerieFactura || ''}-${row.Pedido.NumFactura}</span>`
+                            : `<span class="badge bg-light text-muted border">PENDIENTE</span>`
+                    },
+                    {
+                        title: "FT Firme",
+                        className: "text-center",
+                        render: (data, type, row) => {
+                            let html = "";
+                            if(row.Pedido.NumFactura) {
+                                html = row.Linea.EsPreliminar  ? `<span class="badge bg-info">No</span>`
+                            : `<span class="badge bg-secondary">Si</span>`
+                            } else {
+                                html = "";
+                            }
+                            return html;
+                            
+                        }
+                    },
+                    {
+                        title: "Estado",
+                        className: "text-center",
+                        render: (data, type, row) => {
+                            const config = row.Pedido.DocStatus === 'O'
+                                ? { cl: 'bg-warning text-dark', txt: 'ABIERTO' }
+                                : { cl: 'bg-secondary', txt: 'CERRADO' };
+                            return `<span class="badge ${config.cl}">${config.txt}</span>`;
+                        }
+                    }
+                ],
+                columnDefs: [{ targets: "_all", defaultContent: "---" }]
+            });
+
+         
+            $('#tblPedidos tbody').on('click', 'tr', function (e) {
+                if ($(e.target).is('input')) return;
+                const chk = $(this).find('.chk-pedido');
+                chk.prop('checked', !chk.prop('checked'));
+                $(this).toggleClass('selected-row', chk.prop('checked'));
+                actualizarBotonFactura();
+            });
+
+         
+        }
+
+            function setupAutocompleteCliente() {
+            const input = UI.$('#txtCliente');
+            const hidden = UI.$('#hdnCardCode');
+            const lista = UI.$('#listaClientes');
+            let timeout = null;
+
+            input.addEventListener('input', function () {
+                clearTimeout(timeout);
+                const term = this.value.trim();
+
+                // Al escribir, limpiamos el CardCode oculto porque el texto ya no coincide con una selección firme
+                hidden.value = '';
+
+                if (term.length < 2) { // Empezar a buscar a partir de 2 caracteres
+                    lista.style.display = 'none';
+                    if (term.length === 0) dtPedidos.ajax.reload(); // Si borra todo, recargamos la tabla general
+                    return;
+                }
+
+                // Debounce de 400ms para no saturar el servidor
+                timeout = setTimeout(async () => {
+                    // Mostrar indicador de carga en el dropdown
+                    lista.innerHTML = '<li><span class="dropdown-item text-muted"><i class="spinner-border spinner-border-sm text-primary me-2"></i>Buscando...</span></li>';
+                    lista.style.display = 'block';
+
+                    const res = await OCRDSAPService.Listar(term);
+
+                    lista.innerHTML = ''; // Limpiamos la lista
+
+                    if (res && res.Exito && res.Datos && res.Datos.length > 0) {
+                        res.Datos.forEach(c => {
+                            const li = document.createElement('li');
+                            const a = document.createElement('a');
+                            a.className = 'dropdown-item py-2';
+                            a.href = 'javascript:void(0)';
+                            // Asumimos que tu OCRDSAPDTO tiene CardCode y CardName (ajusta si se llaman distinto)
+                            a.innerHTML = `<div class="d-flex flex-column"><small class="text-primary fw-bold">${c.CardCode}</small><span>${c.CardName}</span></div>`;
+                            
+                            a.onclick = () => {
+                                input.value = c.CardName; // Mostramos el nombre en el input
+                                hidden.value = c.CardCode; // Guardamos el código real para el filtro
+                                lista.style.display = 'none';
+                                dtPedidos.ajax.reload(); // Recargamos la grilla con el nuevo filtro
+                            };
+                            
+                            li.appendChild(a);
+                            lista.appendChild(li);
+                        });
+                    } else {
+                        lista.innerHTML = '<li><span class="dropdown-item text-muted">No se encontraron clientes</span></li>';
+                    }
+                }, 400);
+            });
+
+            // Ocultar la lista si el usuario hace clic en cualquier otra parte de la pantalla
+            document.addEventListener('click', function (e) {
+                if (!input.contains(e.target) && !lista.contains(e.target)) {
+                    lista.style.display = 'none';
+                }
+            });
+        }
+
+        function actualizarBotonFactura() {
+            const count = dtPedidos.rows('.selected-row').count();
+            const btn = $('#btnFacturar');
+            if (count > 0) btn.removeClass('d-none').find('span').text(count);
+            else btn.addClass('d-none');
+        }
+
+        async function procesarFacturacion() {
+            const seleccionados = dtPedidos.rows('.selected-row').data().toArray();
+
+           
+            const cardCodes = [...new Set(seleccionados.map(x => x.Pedido.CardCode))];
+            if (cardCodes.length > 1) {
+                return Swal.fire("Error", "Debe seleccionar líneas de un mismo cliente.", "error");
+            }
+
+            if (seleccionados.some(x => x.Pedido.DocStatus !== 'O')) {
+                return Swal.fire("Atención", "Solo se pueden facturar líneas de pedidos ABIERTOS.", "warning");
+            }
+
+            const confirm = await Swal.fire({
+                title: '¿Generar Factura?',
+                text: `Se facturarán ${seleccionados.length} líneas del cliente ${seleccionados[0].Pedido.CardName}`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, facturar'
+            });
+
+            if (confirm.isConfirmed) {
+                const payload = {
+                    CardCode: cardCodes[0],
+                    Lineas: seleccionados.map(x => ({
+                        BaseEntry: x.Pedido.DocEntry,
+                        BaseLine: x.Linea.LineNum
+                    }))
+                };
+
+                       Swal.fire({
+            title: 'Procesando...',
+            text: 'Por favor espere mientras se genera la factura.',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        }); 
+
+                const res = await PedidosService.Facturar(payload);
+
+                if (res.Exito) {
+                    Swal.fire("Éxito", `Factura creada: ${res.Datos.DocNum}`, "success");
+                    dtPedidos.ajax.reload();
+                }
+
+            }
+        }
+    </script>
+
+    <style>
+        .selected-row {
+            background-color: rgba(0, 50, 100, 0.08) !important;
+            td {
+                background-color: rgba(0, 50, 100, 0.08) !important;
+            }
+        }
+
+        .table-modern tbody tr {
+            cursor: pointer;
+        }
+    </style>
+}

@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="DAO/DAO.csproj" Id="947558ac-fd8f-40bf-8801-8c517ac9657f" />
+  <Project Path="DTO/DTO.csproj" Id="966b7faf-4c76-4eb3-ae36-293f272b57de" />
+  <Project Path="Helpers/Helpers.csproj" Id="ebf42080-105f-4a05-a4a8-3ecf641ba77d" />
+  <Project Path="INTERFACES/INTERFACES.csproj" Id="78fc9bdf-a772-433f-a643-237693ae58af" />
+  <Project Path="ProyectoBaseCore/ProyectoBaseCore.csproj" />
+  <Project Path="SERVICES/SERVICES.csproj" Id="c42194d7-eee0-4c91-8244-b50aa5c124ac" />
+</Solution>

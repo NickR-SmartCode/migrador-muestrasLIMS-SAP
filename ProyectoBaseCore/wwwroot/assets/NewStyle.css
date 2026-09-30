@@ -1,0 +1,77 @@
+﻿
+body {
+    margin: 0;
+    font-family: Arial;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+td, th {
+    padding: 5px 10px;
+    /*border:1px solid grey;*/
+}
+
+main {
+    padding: 1em 2em;
+}
+
+@media (max-width:30em) { /*30x 16px=480px*/
+    table {
+        width: 100%;
+    }
+
+        table tr {
+            display: flex;
+            flex-direction: column;
+            border: 1px solid black;
+            /*padding:1em;*/
+            margin-bottom: 1em;
+        }
+
+        /*table td[data-titulo]{
+            display:flex;
+        }
+        table td[data-titulo]::before{
+            content:attr(data-titulo);
+            width:90px;
+        }*/
+
+        table thead {
+            display: none;
+        }
+
+    .table th, .table td {
+        /* white-space: nowrap; */
+        white-space: inherit;
+    }
+}
+
+
+
+
+
+label.cameraButton {
+    display: inline-block;
+    margin: 1em 0;
+    /* Styles to make it look like a button */
+    color: white;
+    /*border: 2px solid #666;*/
+    /*border-color: #EEE #CCC #CCC #EEE;*/
+    padding: 0.52em;
+    border-radius: 5px;
+    background-color: #154c79;
+    font-size: 12px;
+    cursor:pointer;
+}
+
+    /* Look like a clicked/depressed button */
+    label.cameraButton:active {
+        border-color: #CCC #EEE #EEE #CCC;
+    }
+
+    /* This is the part that actually hides the 'Choose file' text box for camera inputs */
+    label.cameraButton input[accept*="camera"] {
+        display: none;
+    }

@@ -1,0 +1,108 @@
+﻿@{
+    ViewBag.Title = "Perfiles";
+}
+
+<div class="container-fluid" style="height:93%;">
+    <div class="card">
+        <div class="card-body">
+            <div class="topbar-left col-xs-6">
+                <h3>Perfiles</h3>
+            </div>
+            <div class="col-xs-6">
+                <div class="topbar-left col-xs-6">
+                    <h4 style="font-size:1.2em;">Total de Registros: <span id="spnTotalRegistros"></span></h4>
+                </div>
+            </div>
+            <div class="col-xs-6 float-end">
+                <button class="btn btn-primary-custom" onclick="ModalNuevo()"><i class="fa-solid fa-user-plus"></i>  Nuevo</button>
+            </div>
+        </div>
+    </div>
+    <br />
+    <div class="card">
+        <div class="card-body">
+            <table id="table_id" class="table table-modern table-sm bg-white mb-0" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Perfil</th>
+                        <th>Estado</th>
+                        <th>Mas</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody_Perfiles"></tbody>
+            </table>
+        </div>
+    </div>
+
+
+    <!-- Modal -->
+    <div class="modal fade" id="modal-form" data-bs-keyboard="false" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg border-0">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold" id='lblTituloModal'>
+                        @*<i class="bi bi-file-earmark-text me-2"></i>*@
+                    </h5>
+                </div>
+                <div class="container card">
+                    <div class="card-body">
+
+                        <div class='col s12 m12 '>
+                            <div class='container-fluid'>
+                                <input id='txtId' name="txtId" type='hidden' class="form-control input-sm">
+                                <div class='form-horizontal'>
+                                    <div class="row">
+                                        <div class='form-group-sm'>
+                                            <label for='txtPerfil' class="control-label col-sm-4 left-align">Perfil</label>
+                                            <div class="col-sm-12">
+                                                <input id='txtPerfil' name="txtPerfil" type='text' class="form-control form-control-modern smcImputValidacion" tabindex="1">
+                                                <small id="error-txtPerfil" class="text-danger d-none smcLabelValidacion"></small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <br />
+                                    <div class="row">
+                                        <div class='form-group-sm'>
+                                            <label for='cboMenu' class="control-label col-sm-4 left-align">Ventana Inicial</label>
+                                            <div class="col-sm-12">
+                                                <select id='cboMenu' name="cboMenu" type='text' class="form-select form-control-modern smcImputValidacion" tabindex="2"></select>
+                                                <small id="error-cboMenu" class="text-danger d-none smcLabelValidacion"></small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <br />
+                                    <div class="row">
+                                        <div class='col-sm-12 mb-3'>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="chkActivo" tabindex="6" checked>
+                                                <label class="form-check-label" for="chkActivo">
+                                                    Activo
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <br />
+
+
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class=" modal-footer justify-content-end bg-light">
+                    <div class="d-flex flex-row-reverse gap-1">
+                        <button type="button" id="btnGrabar" onclick="GuardarPerfil()" class="btn btn-primary pull-right plu">Grabar</button>
+                        <button type="button" id="btnCancelar" class="btn btn-outline-danger  pull-right" onclick="cerrarModal();">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+</div>
+
+<script src="~/Scripts/Perfil/Listado.js" asp-append-version="true"></script>

@@ -1,0 +1,267 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+    Layout = null;
+}
+
+<!doctype html>
+<html lang="en">
+<head>
+    <title>SAPLinker</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/ProyectoBaseCore.styles.css" asp-append-version="true" />
+    <style>
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .bg-gradient {
+            background: linear-gradient(135deg, #0b3c6f, #0a4f8a);
+        }
+
+        .social-circle {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 1px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #6c757d;
+            cursor: pointer;
+            user-select: none;
+        }
+
+            .social-circle:hover {
+                background-color: #0d6efd;
+                color: #fff;
+                border-color: #0d6efd;
+            }
+
+    </style>
+</head>
+<body class="d-flex align-items-center justify-content-center min-vh-100 bg-primary bg-gradient">
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 col-xl-9">
+                <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                    <div class="row g-0">
+
+                        <!-- LADO IZQUIERDO -->
+                        <div class="col-md-6 d-flex flex-column justify-content-center align-items-start p-2 bg-white">
+
+                            <div class="d-flex justify-content-center align-items-center h-100">
+                            <img src="~/images/saplinker-main-logo.png" class="mb-4" style="width: 90%;" />
+                            </div>
+                            
+
+                            <div class="d-flex gap-2 align-items-center">
+                                <div>
+                                    <img src="~/images/isotipo-smc.png" style="height: 42px" />
+                                </div>
+                                <div>
+                                    Desarrollado por <a target="_blank" href="https://smartcode.pe/" style="color: #004682">SmartCode</a>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- LADO DERECHO -->
+                        <div class="col-lg-6 p-5">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h3 class="mb-0">Iniciar Sesión</h3>
+                                <div class="d-flex gap-2">
+                                    <span class="social-circle">f</span>
+                                    <span class="social-circle">t</span>
+                                </div>
+                            </div>
+
+                            <form id="frmAcceso" method="post">
+
+                                <div class="mb-3">
+                                    <label class="form-label text-uppercase small">Usuario</label>
+                                    <input type="text" id="txtUsuario" class="form-control" placeholder="Usuario" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label text-uppercase small">Password</label>
+                                    <input type="password" id="txtPassword" class="form-control" placeholder="Password" required>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="" id="chkMantener">
+                                    <label class="form-check-label" for="chkMantener">
+                                        Permanecer Conectado
+                                    </label>
+                                </div>
+                                <div class="mb-4 text-end">
+                                    <a id="passRecovery" class="small text-decoration-none" href="#">
+                                        Recuperar contraseña
+                                    </a>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary w-100 py-2">
+                                    Iniciar Sesión
+                                </button>
+
+                                <p class="text-danger text-center mt-3 mb-0" id="mensajeErr"></p>
+
+                            </form>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @*  <script src="~/vendors/sweetalert2/sweetalert2.min.js"></script> *@
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        document.getElementById("frmAcceso").addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            let usuario = document.getElementById("txtUsuario").value;
+            let password = document.getElementById("txtPassword").value;
+            let mantener = document.getElementById("chkMantener").checked;
+
+            fetch("/Home/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    usuario,
+                    password,
+                    mantener
+                })
+            })
+                .then(async response => {
+                    if (!response.ok) {
+
+                        let lblMensaje = document.getElementById("mensajeErr");
+
+                        try {
+                            const err = await response.json();
+                            lblMensaje.textContent = err.message || "Error desconocido";
+                        } catch {
+                            const text = await response.text();
+                            lblMensaje.textContent = text;
+                        }
+
+                        lblMensaje.style.visibility = "visible";
+                        return;
+                    }
+
+                    const data = await response.json();
+                    console.log(data)
+                    window.location.href = "/" + data.data.MenuInicio;
+                })
+                .catch(error => {
+                    let lbl = document.getElementById("mensajeErr");
+                    lbl.textContent = "Error de comunicación con el servidor";
+                    lbl.style.visibility = "visible";
+                });
+
+
+
+        });
+
+        const txtUsuario = document.getElementById("txtUsuario");
+        const recoveryPasswordLink = document.getElementById("passRecovery");
+
+        recoveryPasswordLink.addEventListener('click', () => {
+
+            if (!txtUsuario.value.trim()) {
+                showCustomSwal({
+                    icon: 'warning',
+                    title: 'Usuario requerido',
+                    text: 'Por favor ingrese su nombre de usuario para recuperar la contraseña.',
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#ffc107'
+                });
+                return;
+            }
+
+            showCustomSwal({
+                title: 'Enviando enlace...',
+                html: `
+                            <div style="display: flex; flex-direction: column; align-items: center;">
+                                <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                                </div>
+                                <p style="margin-bottom: 0;">Por favor espere mientras se envía el enlace</p>
+                                <small style="color: #6c757d;">No cierre esta ventana</small>
+                            </div>
+                        `,
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false
+            });
+
+            fetch(`/Usuario/SendPasswordRecoveryLink?usuario=${txtUsuario.value}`)
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('Error en el servidor');
+                })
+                .then(data => {
+                    showCustomSwal({
+                        icon: 'success',
+                        title: '¡Enlace enviado!',
+                        text: 'Se ha enviado un enlace de recuperación a su correo electrónico.',
+                        confirmButtonText: 'Entendido',
+                        confirmButtonColor: '#28a745'
+                    });
+                })
+                .catch(error => {
+                    showCustomSwal({
+                        icon: 'error',
+                        title: 'Error al enviar enlace',
+                        text: 'No se pudo enviar el enlace de recuperación.',
+                        confirmButtonText: 'Entendido',
+                        confirmButtonColor: '#dc3545'
+                    });
+                });
+        })
+
+        function showCustomSwal(options) {
+            const overlay = document.getElementById('modal-overlay');
+
+            // Mostrar el overlay
+            overlay.style.display = 'flex';
+
+            return Swal.fire({
+                ...options,
+                target: overlay,
+                backdrop: false, // Usamos nuestro propio backdrop
+                didOpen: () => {
+                    // Ejecutar callback original si existe
+                    if (options.didOpen) {
+                        options.didOpen();
+                    }
+                },
+                willClose: () => {
+                    // Ocultar overlay cuando se cierra el modal
+                    overlay.style.display = 'none';
+
+                    // Ejecutar callback original si existe
+                    if (options.willClose) {
+                        options.willClose();
+                    }
+                }
+            });
+        }
+
+
+    </script>
+</body>
+
+</html>

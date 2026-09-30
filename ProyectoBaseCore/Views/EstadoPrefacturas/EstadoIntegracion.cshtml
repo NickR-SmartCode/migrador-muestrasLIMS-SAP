@@ -1,0 +1,538 @@
+﻿@{
+    ViewBag.Title = "Gestión de Creación de Facturas";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-content"> 
+    <div class="container-fluid">
+        <!-- PANEL DE CONTROL EN TIEMPO REAL -->
+        <div class="card mb-4 shadow-sm border-0 overflow-hidden" style="border-radius: 15px;">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h5 class="text-dark fw-bold mb-1">
+                            <i class="bi bi-robot text-primary me-2"></i> Automatizador de Facturas SAP
+                        </h5>
+                        <p class="text-muted small mb-0">Monitoreo de sincronización de prefacturas en tiempo real.</p>
+                    </div>
+                    <div id="statusBadge"><span class="badge rounded-pill bg-light text-secondary border px-3 py-2">INACTIVO</span></div>
+                </div>
+
+                <div id="infoProceso" class="row d-none animate__animated animate__fadeIn">
+                    <div class="col-md-9">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="p-2 border-start border-primary border-3 bg-light rounded-end">
+                                    <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.65rem;">Cliente Actual</small>
+                                    <strong id="txtCliente" class="text-truncate d-block">---</strong>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-2 border-start border-info border-3 bg-light rounded-end">
+                                    <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.65rem;">Prefactura</small>
+                                    <strong id="txtProyecto" class="text-truncate d-block">---</strong>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-2 border-start border-success border-3 bg-light rounded-end">
+                                    <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.65rem;">Progreso</small>
+                                    <strong id="txtConteo">0 / 0</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 text-end d-flex align-items-center justify-content-end gap-2">
+                        <button id="btnPausa" class="btn btn-outline-warning btn-sm px-3" onclick="togglePausa()">
+                            <i class="bi bi-pause-fill"></i> Pausar
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm px-3" onclick="detenerAuto()">
+                            <i class="bi bi-stop-fill"></i> Detener
+                        </button>
+                    </div>
+
+                    <div class="col-12 mt-4">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted small fw-bold">Sincronización general</span>
+                            <span id="txtPorcentaje" class="text-primary small fw-bold">0%</span>
+                        </div>
+                        <div class="progress" style="height: 10px; border-radius: 5px; background-color: #eee;">
+                            <div id="barProgreso" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- CONSOLA TEMA CLARO MODERNO -->
+                    <div class="col-12 mt-4">
+                        <div class="console-wrapper">
+                            <div class="console-header d-flex justify-content-between px-3 py-2">
+                                <span class="small fw-bold text-muted"><i class="bi bi-terminal me-2"></i> EVENTOS DEL SISTEMA</span>
+                                <span class="dot-flashing"></span>
+                            </div>
+                            <div id="logConsola" class="console-body p-3">
+                                <div id="listaActividad">
+                                    <div class="text-muted small italic">Esperando inicio de actividades...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="panelInicio" class="text-center py-4">
+                    <div class="mb-3">
+                        <i class="bi bi-cloud-arrow-up text-light-emphasis" style="font-size: 3rem;"></i>
+                    </div>
+                    <h6 class="text-dark fw-bold">¿Listo para sincronizar?</h6>
+                    <p class="text-muted small mx-auto" style="max-width: 400px;">Se procesarán todas las prefacturas del año actual que aún no tengan una factura generada en SAP.</p>
+                    <button class="btn btn-primary px-5 py-2 shadow-sm" style="border-radius: 10px;" onclick="iniciarAuto()">
+                        <i class="bi bi-play-fill me-1"></i> Iniciar Sincronización
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- GRILLA DE LOGS -->
+        <div class="card border-0 shadow-sm" style="border-radius: 15px;">
+            <div class="card-header bg-white py-3 border-0">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h6 class="mb-0 fw-bold text-dark">Historial de Ejecución</h6>
+                    </div>
+
+                     <div class="col-md-2">
+                        <label for="FechaIni" class="form-label-custom">Fecha Inicio</label>
+                        <input type="date" id="FechaIni" class="form-control form-control-modern" value="@DateTime.Now.ToString("yyyy-MM-01")" />
+                    </div>
+
+                <div class="col-md-2">
+                    @{
+                        DateTime date = DateTime.Now;
+                        DateTime oPrimerDiaDelMes = new DateTime(date.Year, date.Month, 1);
+                        DateTime oUltimoDiaDelMes = oPrimerDiaDelMes.AddMonths(1).AddDays(-1);
+                        var fechafin = oUltimoDiaDelMes.ToString("yyyy-MM-dd");
+                    }
+                    <label for="FechaFin" class="form-label-custom">Fecha Fin</label>
+                    <input type="date" id="FechaFin" class="form-control form-control-modern" value="@fechafin" />
+                </div>
+
+
+
+                    <div class="col-md-3">
+                        <label for="cmbFiltroLogEstado" class="form-label-custom">Estado</label>
+                        <select id="cmbFiltroLogEstado" class="form-select  border-light-subtle shadow-sm">
+                            <option value="">[ TODOS LOS RESULTADOS ]</option>
+                            <option value="SUCCESS">SÓLO ÉXITOS</option>
+                            <option value="ERROR">SÓLO ERRORES</option>
+                        </select>
+                    </div>
+
+                       
+                    <div class="col-auto">
+                        <button class="btn btn-light btn-sm border" onclick="dtLogs.ajax.reload()">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table id="tblLogs" class="table table-hover align-middle mb-0 w-100"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalDetalle" tabindex="-1" aria-hidden="true">
+</div>
+
+
+<div id="myCustomModal" class="custom-overlay">
+    <div class="custom-modal-box">
+        <div class="modal-header-custom">
+            <span>Detalle Completo</span>
+            <button class="btn-close-custom" onclick="cerrarFlotante()">&times;</button>
+        </div>
+        <div id="myCustomContent" style="white-space: pre-wrap; word-break: break-word; max-height: 400px; overflow-y: auto; font-size: 0.9rem;">
+            
+        </div>
+        <div style="text-align: right; margin-top: 20px;">
+            <button class="btn btn-secondary btn-sm" onclick="cerrarFlotante()">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script>
+        let dtLogs;
+        let timerProgreso = null;
+        let esProcesoCorriendo = false;
+
+        window.onload = () => {
+            initTabla();
+            consultarEstado(); 
+        }
+
+        function initTabla() {
+            dtLogs = $('#tblLogs').DataTable({
+                serverSide: true,
+                autoWidth: false,
+                scrollX: true,
+                scrollY: "380px",
+                dom: '<"p-3"t><"p-3 d-flex justify-content-between"ip>',
+                ajax: async (d, cb) => {
+                    const extraParams = { 
+                        Estado: UI.$("#cmbFiltroLogEstado").value || null ,
+                        FechaIni: UI.$("#FechaIni").value || null,
+                        FechaFin: UI.$("#FechaFin").value || null,
+                    };
+                    try {
+                        const res = await ApiService.dataTablesAdapter('/EstadoPrefacturas/ListarLogs', d, extraParams);
+                        cb(res);
+                    } catch (e) {
+                        cb({ data: [], recordsTotal: 0, recordsFiltered: 0 });
+                    }
+                },
+                order: [[0, 'desc']],
+                columns:[
+                    { data: "Fecha_Ejecucion", title: "Fecha", render: d => `<span class="text-muted small">${new Date(d).toLocaleString()}</span>` },
+                    { data: "NroPF", title: "Nro. PF" },
+                    {
+                        title: "Cliente",
+                        render: (data, type, row) => {
+                            const ruc = row.CardCodeSAP || '---';
+                            const nombre = row.CardName || 'SIN RAZÓN SOCIAL';
+                            return `
+                                <div class="d-flex flex-column">
+                                    <small class="fw-bold text-secondary">${ruc}</small>
+                                    <span class="text-truncate" style="max-width: 200px;">${nombre}</span>
+                                </div>`;
+                        }
+                    },
+                    { data: "Customer", title: "Cliente LIMS" },
+                    {
+                        data: "Estado", title: "Estado",
+                        render: d => {
+                            const cls = d === 'SUCCESS' ? 'bg-success-subtle text-success border-success-subtle' : 'bg-danger-subtle text-danger border-danger-subtle';
+                            return `<span class="badge border ${cls}" style="font-size: 0.7rem;">${d}</span>`;
+                        }
+                    },
+                    { data: "Mensaje", title: "Desc.", render: d => `<small class="text-muted">${d}</small>` },
+                    {
+                        data: null, title: "Factura SAP",
+                        render: (d, type, row) => row.DocNumSAP ? `<span class="badge bg-primary-subtle text-primary border border-primary-subtle">${row.SeriesSAP}-${row.DocNumSAP}</span>` : '<span class="text-muted small">---</span>'
+                    },
+                      {
+                        data: "Detalle", title: "Detalle",
+                        render: (data) => renderColumnaDetalle(data)
+                    },
+                ]
+            });
+            UI.$("#cmbFiltroLogEstado").addEventListener("change", () => dtLogs.ajax.reload());
+        }
+
+        async function consultarEstado() {
+            let proximoIntervalo = 30000; 
+
+            try {
+                const resSrvc = await ApiService.ajax('/EstadoPrefacturas/ObtenerEstadoAutomatizacion');
+                
+                if (resSrvc?.Exito && resSrvc.Datos) {
+                    const res = resSrvc.Datos;
+                    esProcesoCorriendo = res.IsRunning;
+
+                    const panelInfo = UI.$("#infoProceso");
+                    const panelInicio = UI.$("#panelInicio");
+                    const badge = UI.$("#statusBadge");
+                    const btnPausa = UI.$("#btnPausa");
+
+                    if (res.IsRunning) {
+                        proximoIntervalo = 1500; 
+
+                        panelInfo.classList.remove("d-none");
+                        panelInicio.classList.add("d-none");
+
+                        if (res.IsPaused) {
+                            badge.innerHTML = '<span class="badge rounded-pill bg-warning-subtle text-warning border border-warning-subtle px-3 py-2"><i class="bi bi-pause-circle-fill me-1"></i> PAUSADO</span>';
+                            btnPausa.innerHTML = '<i class="bi bi-play-fill"></i> Reanudar';
+                            btnPausa.className = "btn btn-outline-success btn-sm px-3";
+                        } else {
+                            badge.innerHTML = '<span class="badge rounded-pill bg-primary-subtle text-primary border border-primary-subtle px-3 py-2"><i class="bi bi-gear-fill spin me-1"></i> PROCESANDO</span>';
+                            btnPausa.innerHTML = '<i class="bi bi-pause-fill"></i> Pausar';
+                            btnPausa.className = "btn btn-outline-warning btn-sm px-3";
+                        }
+
+                        UI.$("#txtCliente").innerText = res.ClienteActual || '---';
+                        UI.$("#txtProyecto").innerText = res.ProyectoActual || '---';
+                        UI.$("#txtConteo").innerText = `${res.Procesadas} / ${res.TotalFilas}`;
+
+                        const total = res.TotalFilas > 0 ? res.TotalFilas : 1;
+                        const porc = Math.round((res.Procesadas / total) * 100) || 0;
+                        UI.$("#barProgreso").style.width = porc + "%";
+                        UI.$("#txtPorcentaje").innerText = porc + "%";
+
+                        actualizarConsola(res.UltimasAcciones);
+                        
+                    } else {
+                        proximoIntervalo = 30000; 
+                        if (!panelInfo.classList.contains("d-none")) {
+                            panelInfo.classList.add("d-none");
+                            panelInicio.classList.remove("d-none");
+                            badge.innerHTML = '<span class="badge rounded-pill bg-light text-secondary border px-3 py-2">INACTIVO</span>';
+                            dtLogs.ajax.reload(null, false);
+                        }
+                    }
+                }
+            } catch (error) {
+                proximoIntervalo = 30000;
+            } finally {
+                clearTimeout(timerProgreso);
+                timerProgreso = setTimeout(consultarEstado, proximoIntervalo);
+            }
+        }
+
+        function actualizarConsola(acciones) {
+            if (!acciones || acciones.length === 0) return;
+            
+            const contenedor = UI.$("#listaActividad");
+            const consola = UI.$("#logConsola");
+            const estabaEnElFondo = (consola.scrollHeight - consola.scrollTop) <= (consola.clientHeight + 10);
+            
+            let html = "";
+            acciones.forEach(acc => {
+                const hora = new Date(acc.Fecha).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                const esPedido = acc.Mensaje.includes("Pedido #") || acc.Mensaje.includes("Creado");
+                const esError = acc.Mensaje.includes("Error") || acc.Mensaje.includes("⚠️") || acc.Mensaje.includes("❌");
+                
+                let icon = "bi-chevron-right";
+                let textClass = "text-secondary";
+
+                if (esPedido) { icon = "bi-check-circle-fill"; textClass = "text-primary fw-bold"; }
+                if (esError) { icon = "bi-exclamation-triangle-fill"; textClass = "text-danger"; }
+                
+                html += `
+                    <div class="console-line ${textClass} mb-1">
+                        <span class="console-time">[${hora}]</span>
+                        <i class="bi ${icon} ms-1 me-2"></i>
+                        <span>${acc.Mensaje}</span>
+                    </div>`;
+            });
+            
+            contenedor.innerHTML = html;
+            if (estabaEnElFondo) consola.scrollTop = consola.scrollHeight;
+        }
+
+        function limpiarConsola() {
+            UI.$("#listaActividad").innerHTML = '<div class="text-muted small italic">Iniciando secuencia de comandos...</div>';
+        }
+
+        async function iniciarAuto() {
+            const res = await ApiService.ajax('/EstadoPrefacturas/IniciarAutomatizacion', 'POST');
+            if (res?.Exito) {
+                Toast.fire("Automatización activada", "Iniciando procesamiento...", "success");
+                clearTimeout(timerProgreso);
+                consultarEstado(); 
+            }
+        }
+
+        async function detenerAuto() {
+            const res = await ApiService.ajax('/EstadoPrefacturas/DetenerAutomatizacion', 'POST');
+            if (res?.Exito) Toast.fire("Parada solicitada", "La automatización se detendrá pronto.", "warning");
+        }
+
+        async function togglePausa() {
+            await ApiService.ajax('/EstadoPrefacturas/TogglePausaAutomatizacion', 'POST');
+        }
+
+         function renderColumnaDetalle(data) {
+            if (!data) return '---';
+            const limite = 50;
+
+            const escapeHtml = (str) => str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+            if (data.length > limite) {
+                const textoTruncado = escapeHtml(data.substring(0, limite)) + "...";
+                
+                const textoSeguroUrl = encodeURIComponent(data).replace(/'/g, "%27");
+
+                
+                return `
+                    <div class="d-flex flex-column">
+                        <small class="text-wrap text-muted" style="min-width: 120px; line-height: 1.2;">
+                            ${textoTruncado}
+                        </small>
+                        <button type="button" class="btn-ver-mas-modern" onclick="abrirFlotante('${textoSeguroUrl}', event)">
+                            <i class="bi bi-eye"></i> Ver detalle
+                        </button>
+                    </div>`;
+            }
+            
+            return `<small class="text-wrap" style="min-width: 120px; display:block;">${escapeHtml(data)}</small>`;
+        }
+        
+
+        window.abrirFlotante = function (textoCodificado, event) {
+            if (event) event.stopPropagation();             
+                        const textoOriginal = decodeURIComponent(textoCodificado);
+
+                        UI.$("#myCustomContent").innerText = textoOriginal;
+            UI.$("#myCustomModal").style.display = "flex";
+        };
+
+        window.cerrarFlotante = function () {
+            UI.$("#myCustomModal").style.display = "none";
+        };
+
+                window.onclick = function (event) {
+            const modal = UI.$("#myCustomModal");
+            if (event.target == modal) {
+                cerrarFlotante();
+            }
+        };
+    </script>
+
+    <style>
+        
+        .spin { animation: rotation 2s infinite linear; display: inline-block; }
+        @@keyframes rotation { from { transform: rotate(0deg); } to { transform: rotate(359deg); } }
+
+        
+        .console-wrapper {
+            background: #ffffff;
+            border: 1px solid #e0e6ed;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .console-header {
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e6ed;
+        }
+        .console-body {
+            height: 180px;
+            overflow-y: auto;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-size: 0.82rem;
+            background: #fcfdfe;
+        }
+        .console-line {
+            display: flex;
+            align-items: flex-start;
+            padding: 2px 0;
+            border-bottom: 1px solid #f1f4f8;
+        }
+        .console-line:last-child { border-bottom: none; }
+        .console-time {
+            color: #adb5bd;
+            font-family: 'Consolas', monospace;
+            font-size: 0.75rem;
+            min-width: 75px;
+        }
+
+        
+        .console-body::-webkit-scrollbar { width: 6px; }
+        .console-body::-webkit-scrollbar-track { background: #f1f1f1; }
+        .console-body::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
+        .console-body::-webkit-scrollbar-thumb:hover { background: #bbb; }
+
+        
+        .table-modern thead th {
+            background-color: #f8f9fa;
+            color: #495057;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        
+        .dot-flashing {
+            position: relative;
+            width: 6px;
+            height: 6px;
+            border-radius: 5px;
+            background-color: #0d6efd;
+            animation: dot-flashing 1s infinite linear alternate;
+            top: 8px;
+            right: 10px;
+        }
+        @@keyframes dot-flashing {
+            0% { background-color: #0d6efd; }
+            50%, 100% { background-color: #ebebeb; }
+        }
+
+        
+     .btn-ver-mas-modern {
+        background-color: rgba(0, 123, 255, 0.08);         color: #007bff;
+        border: 1px solid rgba(0, 123, 255, 0.2);
+        border-radius: 20px;         padding: 3px 10px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;         margin-top: 6px;
+        width: fit-content;
+    }
+
+    .btn-ver-mas-modern:hover {
+        background-color: #007bff;
+        color: white;
+        box-shadow: 0 3px 8px rgba(0, 123, 255, 0.3);
+        transform: translateY(-1px);     }
+
+        .custom-overlay {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;         justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        backdrop-filter: blur(2px);
+    }
+
+        .custom-modal-box {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        position: relative;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal-header-custom {
+        font-weight: bold;
+        border-bottom: 1px solid #eee;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .btn-close-custom {
+        cursor: pointer;
+        border: none;
+        background: none;
+        font-size: 1.2rem;
+    }
+
+        .btn-ver-mas {
+        background: none;
+        border: none;
+        color: #007bff;
+        padding: 0;
+        font-size: 0.75rem;
+        text-decoration: underline;
+        cursor: pointer;
+    }
+    </style>
+}

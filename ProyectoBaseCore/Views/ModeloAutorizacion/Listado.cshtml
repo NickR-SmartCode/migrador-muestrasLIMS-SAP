@@ -1,0 +1,223 @@
+﻿@{
+    ViewBag.Title = "Modelos de Autorizacion";
+}
+
+<style>
+
+    .tab {
+        overflow: hidden;
+        border: 1px solid #bcecf1;
+        background-color: #effafc;
+    }
+
+        /* Style the buttons inside the tab */
+        .tab button {
+            background-color: inherit;
+            float: left;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 8px 16px;
+            transition: 0.3s;
+            font-size: 17px;
+        }
+
+            /* Change background color of buttons on hover */
+            .tab button:hover {
+                background-color: #baecf5;
+            }
+
+            /* Create an active/current tablink class */
+            .tab button.active {
+                background-color: #baecf5;
+            }
+
+    /* Style the tab content */
+    .tabcontent {
+        display: none;
+        padding: 6px 12px;
+        border: 1px solid #ccc;
+        border-top: none;
+    }
+</style>
+<div class="container-fluid" style="height:93%;">
+    <div class="card">
+        <div class="card-body">
+            <div class="topbar-left col-xs-6">
+                <h3>Modelos de Autorizacion</h3>
+            </div>
+            <div class="col-xs-6">
+                <div class="topbar-left col-xs-6">
+                    <h4 style="font-size:1.2em;">Total de Registros: <span id="spnTotalRegistros"></span></h4>
+                </div>
+            </div>
+            <div class="col-xs-6 float-end">
+                <button class="btn btn-primary-custom" onclick="ModalNuevo()"> <i class="fa-solid fa-plus"></i>  Nuevo</button>
+            </div>
+        </div>
+
+    </div>
+    <br />
+    <div class="card">
+        <div class="card-body">
+            <table id="table_id" class="table table-modern table-sm bg-white mb-0" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Nombre</th>
+                        <th>Descripcion</th>
+                        <th>Estado</th>
+                        <th>Mas</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody_ModeloAutorizacion"></tbody>
+            </table>
+        </div>
+    </div>
+
+
+    <!-- Modal -->
+    <div class="modal fade" id="modal-form" data-bs-keyboard="false" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content  shadow-lg border-0">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold" id='lblTituloModal'>
+                        @*<i class="bi bi-file-earmark-text me-2"></i>*@
+                    </h5>
+                </div>
+                <div class="container card">
+                    <div class="card-body ">
+                        <div class='col s12 m12 '>
+                            <div class=''>
+                                <input id='txtId' name="txtId" type='hidden' class="form-control input-sm">
+                                <div class='form-horizontal'>
+                                    <div class="row">
+                                        <div class='form-group-sm'>
+                                            <label for='txtNombreModelo' class="control-label col-sm-4 left-align">Nombre</label>
+                                            <div class="col-sm-12">
+                                                <input id='txtNombreModelo' name="txtNombreModelo" type='text' class="form-control form-control-modern input-sm smcImputValidacion" tabindex="1">
+                                                <small id="error-txtNombreModelo" class="text-danger d-none smcLabelValidacion"></small>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class='form-group-sm'>
+                                            <label for='txtDescripcionModelo' class="control-label col-sm-4 left-align">Descripcion</label>
+                                            <div class="col-sm-12">
+                                                <input id='txtDescripcionModelo' name="txtDescripcionModelo" type='text' class="form-control form-control-modern input-sm smcImputValidacion" tabindex="2">
+                                                <small id="error-txtDescripcionModelo" class="text-danger d-none smcLabelValidacion"></small>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <br />
+                                    <div class="row">
+                                        <div class='col-sm-12 mb-3'>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="chkTodosUsuarios" tabindex="3">
+                                                <label class="form-check-label" for="chkTodosUsuarios">
+                                                    Incluir a Todos los Usuarios
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class='col-sm-12 mb-3'>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="chkActivo" tabindex="4" checked>
+                                                <label class="form-check-label" for="chkActivo">
+                                                    Activo
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+
+                                    <small id="error-tabla" class="text-danger d-none smcLabelValidacion"></small>
+                                    <br />
+                                    <div class="tab">
+                                        <button class="tablinks active" onclick="openContenido(event, 'Autor')"><i class="fa-solid fa-user-shield"></i> Autor</button>
+                                        <button class="tablinks" onclick="openContenido(event, 'Documentos')"><i class="fa-solid fa-bars"></i> Modulos</button>
+                                        <button class="tablinks" onclick="openContenido(event, 'Etapas')"><i class="fa-solid fa-bars-progress"></i> Etapas</button>
+                                        <button class="tablinks" onclick="openContenido(event, 'Condiciones')"><i class="fa-solid fa-list-check"></i> Condiciones</button>
+                                    </div>
+
+                                    <div id="Autor" class="tabcontent" style="display: block;">
+                                        <div class="table-responsive">
+                                            <table class="table" id="tabla">
+                                                <thead>
+                                                    <tr>
+                                                        <th><button class="btn btn-xs btn-primary" onclick="AgregarLinea(0)" type="button" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="top" title="Agregar">+</button></th>
+                                                        <th>Autor</th>
+                                                        <th>Accion</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="tbody_detalle"></tbody>
+                                            </table>
+                                        </div>
+
+                                    </div>
+
+                                    <div id="Documentos" class="tabcontent">
+
+                                        <div id="divModulos">
+                                        </div>
+
+                                    </div>
+
+                                    <div id="Etapas" class="tabcontent">
+                                        <div class="table-responsive">
+                                            <table class="table" id="tablaEtapas">
+                                                <thead>
+                                                    <tr>
+                                                        <th><button class="btn btn-xs btn-primary" onclick="AgregarLineaEtapas(0)" type="button" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="top" title="Agregar">+</button></th>
+                                                        <th>Nombre de Etapa</th>
+                                                        <th>Accion</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="tbody_detalle"></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    <div id="Condiciones" class="tabcontent">
+                                        <div class="table-responsive">
+                                            <table class="table" id="tablaCondiciones">
+                                                <thead>
+                                                    <tr>
+                                                        <th><button class="btn btn-xs btn-primary" onclick="AgregarLineaCondiciones('')" type="button" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="top" title="Agregar">+</button></th>
+                                                        <th>Condicion</th>
+                                                        <th>Accion</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="tbody_detalle"></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+
+
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class=" modal-footer justify-content-end bg-light">
+                    <div class="d-flex flex-row-reverse gap-1">
+                        <button type="button" id="btnGrabar" onclick="GuardarModeloAutorizacion()" class="btn btn-primary pull-right plu">Grabar</button>
+                        <button type="button" id="btnCancelar" class="btn btn-outline-danger pull-right" onclick="CerrarModal();">Cancelar</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+
+</div>
+
+<script src="~/Scripts/ModeloAutorizacion/Listado.js" asp-append-version="true"></script>

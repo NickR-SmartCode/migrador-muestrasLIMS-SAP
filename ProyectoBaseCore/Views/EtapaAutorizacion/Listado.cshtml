@@ -1,0 +1,146 @@
+﻿@{
+    ViewBag.Title = "Etapas de Autorizacion";
+}
+
+
+<div class="container-fluid" style="height:93%;">
+    <div class="card">
+        <div class="card-body">
+            <div class="topbar-left col-xs-6">
+                <h3>Etapas de Autorizacion</h3>
+            </div>
+            <div class="col-xs-6">
+                <div class="topbar-left col-xs-6">
+                    <h4 style="font-size:1.2em;">Total de Registros: <span id="spnTotalRegistros"></span></h4>
+                </div>
+            </div>
+            <div class="col-xs-6 float-end">
+                <button class="btn btn-primary-custom" onclick="ModalNuevo()"> <i class="fa-solid fa-plus"></i>  Nuevo</button>
+            </div>
+        </div>
+    </div>
+    <br />
+    <div class="card">
+        <div class="card-body">
+            <table id="table_id" class="table table-modern table-sm bg-white mb-0" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Nombre de Etapa</th>
+                        <th>Autorizaciones Requeridas</th>
+                        <th>Rechazos Requeridos</th>
+                        <th>Estado</th>
+                        <th>Mas</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody_EtapaAutorizacion"></tbody>
+            </table>
+        </div>
+    </div>
+
+
+    <!-- Modal -->
+    <div class="modal fade" id="modal-form" data-bs-keyboard="false" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content  shadow-lg border-0">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold" id='lblTituloModal'>
+                        @*<i class="bi bi-file-earmark-text me-2"></i>*@
+                    </h5>
+                </div>
+                <div class="card container">
+                    <div class="card-body ">
+
+                        <div class='col s12 m12 '>
+                            <div class=''>
+                                <input id='txtId' name="txtId" type='hidden' class="form-control input-sm">
+                                <div class='form-horizontal'>
+                                    <div class="row">
+                                        <div class='form-group-sm'>
+                                            <label for='txtNombreEtapa' class="control-label col-sm-4 left-align">Nombre de Etapa</label>
+                                            <div class="col-sm-12">
+                                                <input id='txtNombreEtapa' name="txtNombreEtapa" type='text' class="form-control form-control-modern input-sm smcImputValidacion" tabindex="1">
+                                                <small id="error-txtNombreEtapa" class="text-danger d-none smcLabelValidacion"></small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <br />
+                                    <div class="row">
+                                        <div class='form-group-sm'>
+                                            <label for='txtDescripcionEtapa' class="control-label col-sm-4 left-align">Descripcion de Etapa</label>
+                                            <div class="col-sm-12">
+                                                <input id='txtDescripcionEtapa' name="txtDescripcionEtapa" type='text' class="form-control form-control-modern input-sm smcImputValidacion" tabindex="2">
+                                                <small id="error-txtDescripcionEtapa" class="text-danger d-none smcLabelValidacion"></small>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <br />
+                                    <div class="row">
+                                        <div class='col-md-6'>
+                                            <label for='txtAutorizacionesRequeridas' class="control-label col-md-12 left-align">Cantidad de Autorizaciones Requeridas</label>
+                                            <div class="col-sm-12">
+                                                <input id='txtAutorizacionesRequeridas' name="txtAutorizacionesRequeridas" type='number' class="form-control form-control-modern input-sm smcImputValidacion" tabindex="3">
+                                                <small id="error-txtAutorizacionesRequeridas" class="text-danger d-none smcLabelValidacion"></small>
+                                            </div>
+                                        </div>
+
+                                        <div class='col-md-6'>
+                                            <label for='txtRechazosRequeridos' class="control-label col-md-12 left-align">Cantidad de Rechazos Requeridos</label>
+                                            <div class="col-sm-12">
+                                                <input id='txtRechazosRequeridos' name="txtRechazosRequeridos" type='number' class="form-control form-control-modern input-sm smcImputValidacion" tabindex="4">
+                                                <small id="error-txtRechazosRequeridos" class="text-danger d-none smcLabelValidacion"></small>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    <br />
+                                    <div class="row">
+                                        <div class='col-sm-12 mb-3'>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="chkActivo" tabindex="6" checked>
+                                                <label class="form-check-label" for="chkActivo">
+                                                    Activo
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <br />
+                                    <small id="error-tabla" class="text-danger d-none smcLabelValidacion"></small>
+                                    <div class="table-responsive">
+                                        <table class="table" id="tabla">
+                                            <thead>
+                                                <tr>
+                                                    <th><button class="btn btn-xs btn-primary" onclick="AgregarLinea(0)" type="button" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="top" title="Agregar">+</button></th>
+                                                    <th>Autorizado por</th>
+                                                    @*<th>Departamento</th>*@
+                                                    <th>Accion</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="tbody_detalle"></tbody>
+                                        </table>
+                                    </div>
+                                    <br />
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class=" modal-footer justify-content-end bg-light">
+                    <div class="d-flex flex-row-reverse gap-1">
+                        <button type="button" id="btnGrabar" onclick="GuardarEtapaAutorizacion()" class="btn btn-primary pull-right plu">Grabar</button>
+                        <button type="button" id="btnCancelar" class="btn btn-outline-danger pull-right" onclick="CerrarModal();">Cancelar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+</div>
+
+<script src="~/Scripts/EtapaAutorizacion/Listado.js" asp-append-version="true"></script>
+
