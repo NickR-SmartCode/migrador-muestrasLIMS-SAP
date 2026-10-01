@@ -9,11 +9,14 @@ namespace ProyectoBaseCore.BackgroundServices
     {
         private readonly AdminAutomatPFService _stateManager;
         private readonly IServiceScopeFactory _scopeFactory;
+        private readonly IConfiguration _configuration;
 
-        public AutomatizacionBackgroundWorker(AdminAutomatPFService stateManager, IServiceScopeFactory scopeFactory)
+        public AutomatizacionBackgroundWorker(AdminAutomatPFService stateManager, IServiceScopeFactory scopeFactory,
+                IConfiguration configuration)
         {
             _stateManager = stateManager;
             _scopeFactory = scopeFactory;
+            _configuration = configuration;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -29,7 +32,7 @@ namespace ProyectoBaseCore.BackgroundServices
                 return;
             }
 
-            if (!_stateManager.IsRunning(baseDeDatosInicial))
+            if (!_stateManager.IsRunning(baseDeDatosInicial) && _configuration.GetValue<bool>("ServiceAutoStart"))
             {
                 _stateManager.Start(baseDeDatosInicial);
                 _stateManager.AddAction(baseDeDatosInicial, "🚀 Servicio iniciado automáticamente (2 min después de encender el servidor).");
@@ -42,9 +45,7 @@ namespace ProyectoBaseCore.BackgroundServices
 
                 var dbsARunear = activeDatabases.Where(db => _stateManager.IsRunning(db)).ToList();
 
-                dbsARunear = new List<string>() { };
-                
-
+          
                 foreach (var bd in dbsARunear)
                 {
                     using (var scope = _scopeFactory.CreateScope())
@@ -75,7 +76,7 @@ namespace ProyectoBaseCore.BackgroundServices
 
         private List<string> GetActiveDatabasesToProcess()
         {
-            return new List<string>() { "SAPLinkerFTS" };
+            return new List<string>() { "FusionSAPLinkerFTS" };
         }
     }
 }

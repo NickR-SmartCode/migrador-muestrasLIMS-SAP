@@ -54,6 +54,24 @@ namespace SERVICES.SAPB1
             return ResultOp<ServiceLayerSession>.Ok(session!);
         }
 
+        private string ExtraerErrorSAP(string jsonResponse)
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(jsonResponse);
+                if (doc.RootElement.TryGetProperty("error", out var errorElement) &&
+                    errorElement.TryGetProperty("message", out var messageElement) &&
+                    messageElement.TryGetProperty("value", out var valueElement))
+                {
+                    return valueElement.GetString() ?? jsonResponse;
+                }
+            }
+            catch
+            {
+            }
+            return jsonResponse;
+        }
+
         protected async Task<ResultOp<TResponse>> PostAsync<TRequest, TResponse>(string endpoint, TRequest data)
         {
             try
@@ -74,11 +92,12 @@ namespace SERVICES.SAPB1
                     return ResultOp<TResponse>.Ok(result!);
                 }
 
-                return ResultOp<TResponse>.Fallo($"Error SL ({response.StatusCode}): {jsonResponse}");
+                string errorSAP = ExtraerErrorSAP(jsonResponse);
+                return ResultOp<TResponse>.Fallo($"Error en SAP: {errorSAP}");
             }
             catch (Exception ex)
             {
-                return ResultOp<TResponse>.Fallo(ex.Message);
+                return ResultOp<TResponse>.Fallo($"Excepción en ServiceLayer: {ex.Message}");
             }
         }
 
@@ -100,13 +119,15 @@ namespace SERVICES.SAPB1
                     var result = JsonSerializer.Deserialize<TResponse>(jsonResponse, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                     return ResultOp<TResponse>.Ok(result!);
                 }
-                return ResultOp<TResponse>.Fallo($"Error SL GET ({response.StatusCode}): {jsonResponse}");
+
+                string errorSAP = ExtraerErrorSAP(jsonResponse);
+                return ResultOp<TResponse>.Fallo($"Error GET en SAP: {errorSAP}");
             }
             catch (Exception ex)
             {
-                return ResultOp<TResponse>.Fallo(ex.Message);
+                return ResultOp<TResponse>.Fallo($"Excepción en ServiceLayer: {ex.Message}");
             }
         }
 
-    }
+}
 }

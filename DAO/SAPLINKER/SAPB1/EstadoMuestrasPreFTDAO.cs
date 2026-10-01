@@ -92,7 +92,7 @@ namespace DAO.SAPLINKER.SAPB1
             var listaDeNoEncontrados = new List<(string, string, string)>();
             foreach (var pf in baseList.Data)
             {
-                
+
                 var key =
                  $"Match_{bd}_{pf.NroPF}_{pf.Cliente.Split("-")[0]}_{pf.DetalleLinea.Replace("\n", "")}";
                 if (_cache.TryGetValue(key, out (int docNum, int series, bool isDraft) sapDetails))
@@ -122,7 +122,7 @@ namespace DAO.SAPLINKER.SAPB1
 
                 foreach (var pf in baseList.Data)
                 {
-                  
+
 
                     var key = $"Match_{bd}_{pf.NroPF}_{pf.Cliente.Split("-")[0]}_{pf.DetalleLinea.Replace("\n", "")}";
 
@@ -226,31 +226,54 @@ WHERE NOT EXISTS (SELECT 1 FROM FirmData)";
 
         #endregion
 
+
+
         public async Task<List<EstadoMuestrasPreFT>> ObtenerPrefacturasPlanasPorAnioAsync(int anio, string bd)
         {
             var listaLims = new List<EstadoMuestrasPreFT>();
 
-            string sqlLims = $@"
-        WITH BaseData AS (
-            SELECT CLIENTE = CAST([RUC_CLI_PF] AS NVARCHAR(300)) + '-' + CAST([RAZ_SOC_CLI_PF] AS NVARCHAR(300)), [CUSTOMER], [PROJECT],
-            '' AS PRODUCTO, [NRO_PF],  [FEC_EMI_PF] AS 'FECHA_EMISION', GETDATE() AS 'FECHA_ENV_SAP', MONEDA_PF AS 'MONEDA',
-            CANTIDAD = 1, '' AS TIPO_SERVICIO, '' AS DETALLE, [DETALLE_PF], CODIGO = 'SRV00001',
-            [VALOR_UNITARIO_PF] AS 'VALOR_UNITARIO', [PRECIO_UNITARIO_PF] AS 'SUB_TOTAL_LINEA',
-            [IGV_PF], [SUB_TOTAL_PF], [TOTAL_PF], [ITEM_ORDEN]
-            FROM View_Muestras_Prefactura_LIMS_SAP
-            WHERE [FEC_EMI_PF] LIKE @anio
-        )
-        SELECT * FROM BaseData ORDER BY [ITEM_ORDEN];";
+            DateTime inicioAnio = new DateTime(anio, 1, 1);
+            DateTime finAnio = new DateTime(anio, 12, 31);
+
+            DateTime fechaCorteFusion = new DateTime(2026, 10, 1);
+
+            DateTime inicioReal = inicioAnio < fechaCorteFusion ? fechaCorteFusion : inicioAnio;
+
+            string fechaInicioStr = inicioReal.ToString("yyyy-MM-dd");
+            string fechaFinStr = finAnio.ToString("yyyy-MM-dd");
+
+            string sqlLims = @"
+        SELECT 
+            CLIENTE = CAST([RUC_CLI_PF] AS NVARCHAR(300)) + '-' + CAST([RAZ_SOC_CLI_PF] AS NVARCHAR(300)), 
+            [CUSTOMER], 
+            [PROJECT],
+            '' AS PRODUCTO, 
+            [NRO_PF],  
+            [FEC_EMI_PF] AS FECHA_EMISION, 
+            GETDATE() AS FECHA_ENV_SAP, 
+            MONEDA_PF AS MONEDA,
+            1 AS CANTIDAD, 
+            '' AS TIPO_SERVICIO, 
+            '' AS DETALLE, 
+            [DETALLE_PF], 
+            'SRV00001' AS CODIGO,
+            [VALOR_UNITARIO_PF] AS VALOR_UNITARIO, 
+            [PRECIO_UNITARIO_PF] AS SUB_TOTAL_LINEA,
+            [IGV_PF], 
+            [SUB_TOTAL_PF], 
+            [TOTAL_PF], 
+            [ITEM_ORDEN]
+        FROM View_Muestras_Prefactura_LIMS_SAP
+        WHERE TRY_CONVERT(DATE, FEC_EMI_PF, 103) BETWEEN @fechaInicio AND @fechaFin
+        ORDER BY [ITEM_ORDEN]";
 
             UsarConexionLIMS(true);
             using (var connSql = CrearConexion(bd))
             {
                 await connSql.OpenAsync();
                 using var cmdLims = new SqlCommand(sqlLims, connSql);
-                cmdLims.Parameters.Add(new SqlParameter("@anio", SqlDbType.VarChar)
-                {
-                    Value = $"%/{anio}"
-                });
+                cmdLims.Parameters.AddWithValue("@fechaInicio", fechaInicioStr);
+                cmdLims.Parameters.AddWithValue("@fechaFin", fechaFinStr);
 
                 using var reader = await cmdLims.ExecuteReaderAsync();
                 while (await reader.ReadAsync()) listaLims.Add(Mapear(reader));
@@ -258,21 +281,36 @@ WHERE NOT EXISTS (SELECT 1 FROM FirmData)";
 
             if (!listaLims.Any()) return listaLims;
 
-
             var sapMatches = new Dictionary<string, List<MatchSAP>>();
+
+            // Consulta HANA filtrada exactamente por el mismo rango de fechas
             string sqlHana = @"
-        SELECT 'Firm' AS ""Source"", T0.""DocEntry"", T0.""DocNum"", T0.""Series"", T0.""DocDate"", T0.""DocTotal"", T0.""DocCur"", T0.""DocRate"", T0.""U_ProjectoLims"", T0.""CardCode"",T1.""LicTradNum""
-        FROM OINV T0 INNER JOIN OCRD T1 ON T0.""CardCode""=T1.""CardCode"" WHERE T0.""U_ProjectoLims"" IS NOT NULL AND YEAR(T0.""DocDate"") >= ? AND T0.""CANCELED"" = 'N'
+        SELECT 'Firm' AS ""Source"", T0.""DocEntry"", T0.""DocNum"", T0.""Series"", T0.""DocDate"", T0.""DocTotal"", T0.""DocCur"", T0.""DocRate"", T0.""U_ProjectoLims"", T0.""CardCode"", T1.""LicTradNum""
+        FROM OINV T0 
+        INNER JOIN OCRD T1 ON T0.""CardCode"" = T1.""CardCode"" 
+        WHERE T0.""U_ProjectoLims"" IS NOT NULL 
+          AND T0.""DocDate"" BETWEEN ? AND ? 
+          AND T0.""CANCELED"" = 'N'
+
         UNION ALL
-        SELECT 'Draft' AS ""Source"", T0.""DocEntry"", T0.""DocNum"", T0.""Series"", T0.""DocDate"", T0.""DocTotal"", T0.""DocCur"", T0.""DocRate"", T0.""U_ProjectoLims"", T0.""CardCode"",T1.""LicTradNum""
-        FROM ODRF T0 INNER JOIN OCRD T1 ON T0.""CardCode""=T1.""CardCode"" WHERE T0.""ObjType"" = '13' AND T0.""DocStatus"" = 'O' AND T0.""U_ProjectoLims"" IS NOT NULL AND YEAR(T0.""DocDate"") >= ?";
+
+        SELECT 'Draft' AS ""Source"", T0.""DocEntry"", T0.""DocNum"", T0.""Series"", T0.""DocDate"", T0.""DocTotal"", T0.""DocCur"", T0.""DocRate"", T0.""U_ProjectoLims"", T0.""CardCode"", T1.""LicTradNum""
+        FROM ODRF T0 
+        INNER JOIN OCRD T1 ON T0.""CardCode"" = T1.""CardCode"" 
+        WHERE T0.""ObjType"" = '13' 
+          AND T0.""DocStatus"" = 'O' 
+          AND T0.""U_ProjectoLims"" IS NOT NULL 
+          AND T0.""DocDate"" BETWEEN ? AND ?";
 
             using (var connHana = _conexion.CrearConexionHana(bd))
             {
                 await connHana.OpenAsync();
                 using var cmdHana = new HanaCommand(sqlHana, connHana);
-                cmdHana.Parameters.Add(new HanaParameter("", anio - 1));
-                cmdHana.Parameters.Add(new HanaParameter("", anio - 1));
+
+                cmdHana.Parameters.Add(new HanaParameter("p1", HanaDbType.Date) { Value = inicioReal });
+                cmdHana.Parameters.Add(new HanaParameter("p2", HanaDbType.Date) { Value = finAnio });
+                cmdHana.Parameters.Add(new HanaParameter("p3", HanaDbType.Date) { Value = inicioReal });
+                cmdHana.Parameters.Add(new HanaParameter("p4", HanaDbType.Date) { Value = finAnio });
 
                 using var readerHana = (HanaDataReader)await cmdHana.ExecuteReaderAsync();
                 while (await readerHana.ReadAsync())
@@ -292,6 +330,7 @@ WHERE NOT EXISTS (SELECT 1 FROM FirmData)";
                         DocCur = readerHana["DocCur"]?.ToString() ?? "SOL",
                         DocRate = readerHana["DocRate"] != DBNull.Value ? Convert.ToDecimal(readerHana["DocRate"]) : 1m
                     };
+
                     if (!sapMatches.ContainsKey(key)) sapMatches[key] = new List<MatchSAP>();
                     sapMatches[key].Add(match);
                 }
@@ -299,17 +338,18 @@ WHERE NOT EXISTS (SELECT 1 FROM FirmData)";
 
             foreach (var pf in listaLims)
             {
-                string sapKey = $"{pf.NroPF}_{pf.Cliente.Split("-")[0]}";
+                string rucCliente = pf.Cliente?.Split('-')[0] ?? "";
+                string sapKey = $"{pf.NroPF}_{rucCliente}";
 
                 if (sapMatches.TryGetValue(sapKey, out var matches))
                 {
                     pf.DocumentosSAP = matches;
                 }
             }
-          
+
             return listaLims;
         }
-    }
+    } 
 
 
 
